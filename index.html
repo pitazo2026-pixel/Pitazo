@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Resultados de fútbol en vivo, fixture y tabla de posiciones de la Liga Profesional, Copa Libertadores, Champions League y más.">
+<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Pitazo - Resultados de fútbol en vivo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky scoreboard header, day tabs, league chips; matches column left, standings + ad right; stacks on phones */
+:root {
+  --bg: #f4f3fb;
+  --surface: #ffffff;
+  --fg: #17163a;
+  --muted: #625f86;
+  --line: #dcdaf0;
+  --pitch: #4630e0;
+  --pitch-soft: #e9e6fb;
+  --on-pitch: #ffffff;
+  --brand: #4630e0;
+  --mark: #ffc61a;
+  --live: #e5174f;
+  --ad-bg: #ecebf6;
+  --font-display: "Barlow Condensed", "Arial Narrow", Impact, sans-serif;
+  --font-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e0d24; --surface: #17163a; --fg: #ecebff; --muted: #9a98c4;
+    --line: #2a2858; --pitch: #a79dff; --pitch-soft: #211f4d; --on-pitch: #0e0d24; --brand: #5a45f0; --mark: #ffc61a; --live: #ff5c85; --ad-bg: #1a1941;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e0d24; --surface: #17163a; --fg: #ecebff; --muted: #9a98c4;
+  --line: #2a2858; --pitch: #a79dff; --pitch-soft: #211f4d; --on-pitch: #0e0d24; --brand: #5a45f0; --mark: #ffc61a; --live: #ff5c85; --ad-bg: #1a1941;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.4; padding-inline: 16px; padding-block: 0 32px; }
+.wrap { max-width: 1100px; margin-inline: auto; }
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 2px solid var(--fg); padding-block: 10px; margin-inline: -16px; padding-inline: 16px; }
+.top .wrap { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.logo { font-family: var(--font-display); font-weight: 800; font-size: 34px; letter-spacing: .01em; text-transform: uppercase; line-height: 1; }
+.logo span { color: var(--pitch); }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand svg { width: 42px; height: 42px; flex: 0 0 auto; }
+.tag { font-size: 13px; color: var(--muted); }
+.notice { margin-block: 12px; padding: 8px 12px; border: 1px dashed var(--line); background: var(--surface); font-size: 13px; color: var(--muted); }
+.ad { background: var(--ad-bg); border: 1px dashed var(--line); color: var(--muted); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+.ad.leader { min-height: 90px; margin-block: 12px; }
+.ad.rect { min-height: 250px; }
+.ad.inline { min-height: 90px; margin-block: 10px; }
+.days { display: flex; gap: 6px; overflow-x: auto; padding-block: 4px; }
+.day { flex: 0 0 auto; min-width: 74px; padding: 8px 12px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); font: inherit; text-align: center; cursor: pointer; border-radius: 4px; }
+.day b { display: block; font-family: var(--font-display); font-size: 20px; line-height: 1.1; }
+.day small { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.day[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.day[aria-pressed="true"] small { color: var(--bg); opacity: .75; }
+.chips { display: flex; gap: 6px; overflow-x: auto; padding-block: 10px 4px; }
+.chip { flex: 0 0 auto; padding: 5px 12px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--fg); font: inherit; font-size: 13px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--pitch); border-color: var(--pitch); color: var(--on-pitch); }
+button:focus-visible { outline: 2px solid var(--pitch); outline-offset: 2px; }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; margin-top: 12px; }
+@media (max-width: 820px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.league { background: var(--surface); border: 1px solid var(--line); margin-bottom: 14px; }
+.league h2 { margin: 0; padding: 8px 12px; font-family: var(--font-display); font-size: 18px; letter-spacing: .06em; text-transform: uppercase; background: var(--pitch-soft); border-bottom: 1px solid var(--line); }
+.match { display: grid; grid-template-columns: 62px minmax(0, 1fr) 34px; align-items: center; column-gap: 8px; padding: 9px 12px; border-top: 1px solid var(--line); }
+.match:first-of-type { border-top: 0; }
+.st { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.st.live { color: var(--live); display: flex; align-items: center; gap: 5px; }
+.st.live i { width: 7px; height: 7px; border-radius: 50%; background: var(--live); animation: pulse 1.4s infinite; }
+@keyframes pulse { 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { .st.live i { animation: none; } }
+.teams, .scores { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.teams span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+.scores { text-align: right; font-family: var(--font-display); font-size: 20px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.scores .w, .teams .w { font-weight: 700; }
+.empty { padding: 24px 12px; text-align: center; color: var(--muted); background: var(--surface); border: 1px solid var(--line); }
+.side h2 { margin: 0 0 8px; font-family: var(--font-display); font-size: 22px; text-transform: uppercase; letter-spacing: .05em; }
+.tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 7px; text-align: right; white-space: nowrap; }
+th { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--line); }
+th:nth-child(2), td:nth-child(2) { text-align: left; width: 100%; }
+td:first-child, th:first-child { text-align: center; color: var(--muted); }
+tbody tr { border-top: 1px solid var(--line); }
+tbody tr:nth-child(-n+4) td:first-child { color: var(--pitch); font-weight: 700; }
+td.pts { font-weight: 700; }
+.side .ad { margin-top: 16px; }
+footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <svg viewBox="0 0 48 48" role="img" aria-label="Logo de Pitazo">
+        <rect width="48" height="48" rx="11" fill="var(--brand)"/>
+        <rect x="7" y="19" width="17" height="8" rx="4" fill="var(--mark)"/>
+        <circle cx="29" cy="28" r="11" fill="var(--mark)"/>
+        <circle cx="29" cy="28" r="4" fill="var(--brand)"/>
+        <circle cx="29" cy="14" r="3" fill="none" stroke="var(--mark)" stroke-width="2.5"/>
+        <path d="M36 12l3-3M40 17l4-1M38 8l1-4" stroke="var(--mark)" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+      </svg>
+      <div class="logo">Pita<span>zo</span></div>
+    </div>
+    <div class="tag">Resultados de fútbol en vivo</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="notice" id="status" role="status" hidden></div>
+
+  <div class="ad leader">Espacio publicitario 728×90</div>
+
+  <div class="days" id="days" role="group" aria-label="Elegir día"></div>
+  <div class="chips" id="chips" role="group" aria-label="Filtrar por torneo"></div>
+
+  <div class="grid">
+    <section id="matches" aria-label="Partidos"></section>
+
+    <aside class="side">
+      <h2 id="tableTitle">Posiciones</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>#</th><th>Equipo</th><th>PJ</th><th>DG</th><th>Pts</th></tr></thead>
+          <tbody id="table"></tbody>
+        </table>
+      </div>
+      <div class="ad rect">Espacio publicitario 300×250</div>
+    </aside>
+  </div>
+
+  <footer>Pitazo · Zona horaria de Buenos Aires · Datos de API-Football.</footer>
+</main>
+
+<script>
+/* Mismos torneos que functions/_shared.js */
+var LEAGUES = {
+  128: "Liga Profesional",
+  130: "Copa Argentina",
+  13: "Copa Libertadores",
+  11: "Copa Sudamericana",
+  2: "Champions League",
+  39: "Premier League",
+  140: "LaLiga"
+};
+var ORDER = ["128", "130", "13", "11", "2", "39", "140"];
+var TZ = "America/Argentina/Buenos_Aires";
+var DAYNAMES = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+var state = { day: 0, lg: "all", matches: [], loading: true, error: "" };
+var reqId = 0;
+var refreshTimer = null;
+
+function ymd(off) {
+  var d = new Date();
+  d.setDate(d.getDate() + off);
+  return d.toLocaleDateString("en-CA", { timeZone: TZ });
+}
+
+function dayLabel(off) {
+  var d = new Date();
+  d.setDate(d.getDate() + off);
+  var n = new Date(d.toLocaleString("en-US", { timeZone: TZ }));
+  return { name: off === 0 ? "hoy" : DAYNAMES[n.getDay()], num: n.getDate() };
+}
+
+function fmtTime(iso) {
+  return new Date(iso).toLocaleTimeString("es-AR", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hour12: false });
+}
+
+function showStatus(msg) {
+  var el = document.getElementById("status");
+  el.hidden = !msg;
+  el.textContent = msg || "";
+}
+
+function buildDays() {
+  var box = document.getElementById("days");
+  box.innerHTML = "";
+  [-1, 0, 1, 2].forEach(function (off) {
+    var l = dayLabel(off);
+    var b = document.createElement("button");
+    b.className = "day";
+    b.setAttribute("aria-pressed", String(state.day === off));
+    b.innerHTML = "<small>" + l.name + "</small><b>" + l.num + "</b>";
+    b.onclick = function () { state.day = off; render(); loadMatches(); };
+    box.appendChild(b);
+  });
+}
+
+function buildChips() {
+  var box = document.getElementById("chips");
+  box.innerHTML = "";
+  ["all"].concat(ORDER).forEach(function (k) {
+    var b = document.createElement("button");
+    b.className = "chip";
+    b.textContent = k === "all" ? "Todos" : LEAGUES[k];
+    b.setAttribute("aria-pressed", String(state.lg === k));
+    b.onclick = function () { state.lg = k; render(); loadTable(); };
+    box.appendChild(b);
+  });
+}
+
+function matchRow(m) {
+  var row = document.createElement("div");
+  row.className = "match";
+  var st = document.createElement("div");
+  var live = m.state === "live";
+  st.className = "st" + (live ? " live" : "");
+  if (live) st.innerHTML = "<i></i>" + (m.min ? m.min + "'" : "En vivo");
+  else if (m.state === "ht") st.textContent = "Ent.";
+  else if (m.state === "done") st.textContent = m.code === "PEN" ? "Pen." : "Final";
+  else if (m.state === "next") st.textContent = fmtTime(m.time);
+  else st.textContent = m.code;
+  var played = m.hs !== null && m.hs !== undefined;
+  var hw = played && m.hs > m.as ? "w" : "";
+  var aw = played && m.as > m.hs ? "w" : "";
+  var teams = document.createElement("div");
+  teams.className = "teams";
+  var s1 = document.createElement("span"); s1.textContent = m.home; s1.className = hw;
+  var s2 = document.createElement("span"); s2.textContent = m.away; s2.className = aw;
+  teams.appendChild(s1); teams.appendChild(s2);
+  var sc = document.createElement("div");
+  sc.className = "scores";
+  var c1 = document.createElement("span"); c1.textContent = played ? m.hs : "-"; c1.className = hw;
+  var c2 = document.createElement("span"); c2.textContent = played ? m.as : "-"; c2.className = aw;
+  sc.appendChild(c1); sc.appendChild(c2);
+  row.appendChild(st); row.appendChild(teams); row.appendChild(sc);
+  return row;
+}
+
+function buildMatches() {
+  var box = document.getElementById("matches");
+  box.innerHTML = "";
+  function msg(t) {
+    var e = document.createElement("div");
+    e.className = "empty";
+    e.textContent = t;
+    box.appendChild(e);
+  }
+  if (state.loading) { msg("Cargando partidos…"); return; }
+  if (state.error) { msg("No se pudieron cargar los partidos. Probá de nuevo en un momento."); return; }
+  var list = state.matches.filter(function (m) { return state.lg === "all" || String(m.lg) === state.lg; });
+  if (!list.length) { msg("No hay partidos de este torneo para el día elegido."); return; }
+  var groups = {}, order = [];
+  list.forEach(function (m) {
+    if (!groups[m.lg]) { groups[m.lg] = []; order.push(m.lg); }
+    groups[m.lg].push(m);
+  });
+  order.sort(function (a, b) { return ORDER.indexOf(String(a)) - ORDER.indexOf(String(b)); });
+  order.forEach(function (k, i) {
+    var sec = document.createElement("div");
+    sec.className = "league";
+    var h = document.createElement("h2");
+    h.textContent = LEAGUES[k];
+    sec.appendChild(h);
+    groups[k].forEach(function (m) { sec.appendChild(matchRow(m)); });
+    box.appendChild(sec);
+    if (i === 0 && order.length > 1) {
+      var ad = document.createElement("div");
+      ad.className = "ad inline";
+      ad.textContent = "Espacio publicitario en el listado";
+      box.appendChild(ad);
+    }
+  });
+}
+
+function render() {
+  buildDays();
+  buildChips();
+  buildMatches();
+}
+
+function loadMatches(silent) {
+  var id = ++reqId;
+  if (!silent) {
+    state.loading = true;
+    state.error = "";
+    buildMatches();
+  }
+  fetch("/api/fixtures?date=" + ymd(state.day))
+    .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || "error"); return j; }); })
+    .then(function (j) {
+      if (id !== reqId) return;
+      state.matches = j.matches || [];
+      state.loading = false;
+      showStatus("");
+      buildMatches();
+    })
+    .catch(function (e) {
+      if (id !== reqId) return;
+      state.loading = false;
+      state.error = String(e.message || e);
+      showStatus("Hubo un problema al consultar los datos. Si sos el dueño del sitio, revisá la clave de API-Football.");
+      buildMatches();
+    });
+}
+
+function loadTable() {
+  var lg = state.lg === "all" ? "128" : state.lg;
+  var tb = document.getElementById("table");
+  var title = document.getElementById("tableTitle");
+  title.textContent = "Posiciones · " + LEAGUES[lg];
+  tb.innerHTML = "<tr><td colspan=\"5\" style=\"text-align:center;color:var(--muted)\">Cargando…</td></tr>";
+  fetch("/api/standings?league=" + lg)
+    .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || "error"); return j; }); })
+    .then(function (j) {
+      if (lg !== (state.lg === "all" ? "128" : state.lg)) return;
+      var g = j.groups && j.groups[0];
+      tb.innerHTML = "";
+      if (!g || !g.length) {
+        tb.innerHTML = "<tr><td colspan=\"5\" style=\"text-align:center;color:var(--muted)\">Este torneo no tiene tabla.</td></tr>";
+        return;
+      }
+      if (g[0].group) title.textContent = "Posiciones · " + g[0].group;
+      g.forEach(function (r) {
+        var tr = document.createElement("tr");
+        tr.innerHTML = "<td></td><td></td><td></td><td></td><td class=\"pts\"></td>";
+        tr.children[0].textContent = r.rank;
+        tr.children[1].textContent = r.team;
+        tr.children[2].textContent = r.played;
+        tr.children[3].textContent = (r.gd > 0 ? "+" : "") + r.gd;
+        tr.children[4].textContent = r.pts;
+        tb.appendChild(tr);
+      });
+    })
+    .catch(function () {
+      tb.innerHTML = "<tr><td colspan=\"5\" style=\"text-align:center;color:var(--muted)\">No se pudo cargar la tabla.</td></tr>";
+    });
+}
+
+render();
+loadMatches();
+loadTable();
+/* Renueva los resultados cada minuto mientras la pestaña está abierta. */
+setInterval(function () { if (!document.hidden && state.day === 0) loadMatches(true); }, 60000);
+</script>
+
+</body>
+</html>
